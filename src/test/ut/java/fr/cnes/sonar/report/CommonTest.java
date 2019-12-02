@@ -61,7 +61,8 @@ public abstract class CommonTest {
                 "-o", "./target",
                 "-l", "en_US",
                 "-r", "src/main/resources/template/code-analysis-template.docx",
-                "-x", "src/main/resources/template/issues-template.xlsx"
+                "-x", "src/main/resources/template/issues-template.xlsx",
+                "-g", "",
         });
 
         report.setProjectName("CNES Report");

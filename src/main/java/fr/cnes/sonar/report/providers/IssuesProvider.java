@@ -17,19 +17,22 @@
 
 package fr.cnes.sonar.report.providers;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import com.google.gson.JsonObject;
+
 import fr.cnes.sonar.report.exceptions.BadSonarQubeRequestException;
 import fr.cnes.sonar.report.exceptions.SonarQubeException;
 import fr.cnes.sonar.report.model.Facet;
 import fr.cnes.sonar.report.model.Issue;
 import fr.cnes.sonar.report.model.Rule;
 import fr.cnes.sonar.report.model.SonarQubeServer;
+import fr.cnes.sonar.report.utils.CodingLanguage;
+import fr.cnes.sonar.report.utils.CodingLanguageManager;
 import fr.cnes.sonar.report.utils.StringManager;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Provides issue items
@@ -145,6 +148,9 @@ public class IssuesProvider extends AbstractDataProvider {
     /**
      * Find the display name of the programming language corresponding
      * to a rule with its key
+     * 
+     * Some time the json not contains the rule associated to key.
+     * This method cannot be used.
      * @param ruleKey key of the rule to find
      * @param rules array of the rules to browse
      * @return a String containing the display name of the programming language
@@ -177,15 +183,32 @@ public class IssuesProvider extends AbstractDataProvider {
      */
     private void setIssuesLanguage(Issue[] issues, Rule[] rules) {
         // rule's key of an issue
-        String rulesKey;
+        String rulesKey; 
+        // rule's type of an issue
+        String rulesType;
         // language of the previous rule's key
-        String rulesLanguage;
-
+        String rulesLanguage = "";
+        //Coding language manager
+        CodingLanguageManager manager = CodingLanguageManager.getInstance();
+        //CodingLnaguage
+        CodingLanguage language;
+        
         // for each issue we associate the corresponding programming language
         // by browsing the rules array
         for (Issue issue : issues) {
             rulesKey = issue.getRule();
-            rulesLanguage = findLanguageOf(rulesKey, rules);
+            //get tool type
+            rulesType = rulesKey.substring(0, rulesKey.indexOf(":")+1);
+            
+            language = manager.getLanguage(rulesType);
+            if (language != null ) {
+            	rulesLanguage = language.getLabel();
+            }
+            else {
+            	System.out.println( "The language is not recognized for rule type (" + rulesType+")");
+            }
+            //System.out.println( "%%IssuesProvider.setIssuesLanguage(" + rulesKey+") ("+rulesLanguage+")("+rulesType+")");
+			
             issue.setLanguage(rulesLanguage);
         }
     }

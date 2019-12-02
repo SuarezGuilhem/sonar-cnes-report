@@ -59,6 +59,8 @@ public class ReportConfiguration {
     private String templateSpreadsheet;
     /** Options for n. */
     private String templateMarkdown;
+    /** Options for g. */
+    private String languageConfiguration;
 
     /**
      * Private constructor, use create method instead.
@@ -76,6 +78,8 @@ public class ReportConfiguration {
      * @param enableSpreadsheet Value for e option.
      * @param templateReport Value for r option.
      * @param templateSpreadsheet Value for x option.
+     * @param templateMarkdown Value for x option.
+     * @param languageConfiguration Value for g option.
      */
     private ReportConfiguration(final boolean help, final boolean version, final String server,
                                 final String token, final String project, final String output,
@@ -83,7 +87,8 @@ public class ReportConfiguration {
                                 final boolean enableConf, final boolean enableReport,
                                 final boolean enableSpreadsheet, final boolean enableCSV,
                                 final boolean enableMarkdown, String templateReport,
-                                final String templateSpreadsheet, final String templateMarkdown) {
+                                final String templateSpreadsheet, final String templateMarkdown, 
+                                final String languageConfiguration) {
         this.help = help;
         this.version = version;
         this.server = server;
@@ -101,6 +106,7 @@ public class ReportConfiguration {
         this.templateReport = templateReport;
         this.templateSpreadsheet = templateSpreadsheet;
         this.templateMarkdown = templateMarkdown;
+        this.languageConfiguration = languageConfiguration;
     }
 
     /**
@@ -133,7 +139,8 @@ public class ReportConfiguration {
                 !commandLineManager.hasOption("m"),
                 commandLineManager.getOptionValue("r", StringManager.EMPTY),
                 commandLineManager.getOptionValue("x", StringManager.EMPTY),
-                commandLineManager.getOptionValue("n", StringManager.EMPTY));
+                commandLineManager.getOptionValue("n", StringManager.EMPTY),
+                commandLineManager.getOptionValue("g", StringManager.EMPTY));
     }
 
     public boolean isHelp() {
@@ -198,5 +205,9 @@ public class ReportConfiguration {
 
     public String getTemplateMarkdown(){
         return templateMarkdown;
+    }
+    
+    public String getLanguageConfiguration(){
+        return languageConfiguration;
     }
 }

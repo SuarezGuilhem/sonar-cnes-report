@@ -17,22 +17,30 @@
 
 package fr.cnes.sonar.report.exporters.docx;
 
-import fr.cnes.sonar.report.exceptions.BadExportationDataTypeException;
-import fr.cnes.sonar.report.exporters.IExporter;
-import fr.cnes.sonar.report.model.Report;
-import fr.cnes.sonar.report.utils.StringManager;
-import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
-import org.apache.poi.openxml4j.opc.OPCPackage;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.xmlbeans.XmlException;
-
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
+import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.xmlbeans.XmlException;
+
+import fr.cnes.sonar.report.exceptions.BadExportationDataTypeException;
+import fr.cnes.sonar.report.exporters.IExporter;
+import fr.cnes.sonar.report.model.Report;
+import fr.cnes.sonar.report.utils.CodingLanguage;
+import fr.cnes.sonar.report.utils.CodingLanguageManager;
+import fr.cnes.sonar.report.utils.CodingLanguageTool;
+import fr.cnes.sonar.report.utils.StringManager;
 
 /**
  * Exports the report in .docx format
@@ -49,6 +57,13 @@ public class DocXExporter implements IExporter {
      * Placeholder for the table containing counts of issues by type and severity
      */
     private static final String COUNT_TABLE_PLACEHOLDER = "$ISSUES_COUNT";
+
+    /**
+     * Placeholder for the language transgression table
+     */
+    private static final String TANSGRESSION_LANGUAGE_PLACEHOLDER= "$lang";
+
+    
     /**
      * Placeholder for the table containing counts of issues by type and severity
      */
@@ -65,6 +80,20 @@ public class DocXExporter implements IExporter {
             StringManager.string("header.type"),
             StringManager.string("header.severity"),
             StringManager.string(HEADER_NUMBER)};
+    /**
+     * Generated table header
+     */
+    private static final String[] HEADER_LANGUAGE_SYNTHESIS = {
+    		StringManager.string("header.type"),
+    		StringManager.string(HEADER_NUMBER),
+    		StringManager.string("header.percentage")};
+    private static final String[] HEADER_LANGUAGE_TOOL = {
+    		StringManager.string("header.name"),
+    		StringManager.string("header.type"),
+    		StringManager.string("header.severity"),
+    		StringManager.string(HEADER_NUMBER) };
+    
+
     /**
      * Name of the columns in volumes table
      */
@@ -124,6 +153,36 @@ public class DocXExporter implements IExporter {
             final List<String> headerIssues = new ArrayList<>(Arrays.asList(issuesArrayFr));
             DocXTools.fillTable(document, headerIssues, issues, DETAILS_TABLE_PLACEHOLDER);
 
+            
+            // Add the issue number by language
+            final List<String> headerLanguage = new ArrayList<>(Arrays.asList(VOLUMES_HEADER));
+            final List<List<String>> transgressionByLanguage = DataAdapter.getLangTransgression(report);
+            DocXTools.fillTable(document,headerLanguage,transgressionByLanguage, TANSGRESSION_LANGUAGE_PLACEHOLDER);
+            
+            //Add tables for languages
+            final List<String> headerSynthesis = new ArrayList<>(Arrays.asList(HEADER_LANGUAGE_SYNTHESIS));
+            final List<String> headerTool = new ArrayList<>(Arrays.asList(HEADER_LANGUAGE_TOOL));
+            List<List<String>> lineToDisplay;
+            //System.out.println( "--Before Coding language ");
+            
+            for(CodingLanguage language : CodingLanguageManager.getInstance().getLanguages()) {
+            	
+            	//System.out.println( "--Coding language " + language.getName());
+            	// Synthesis table
+            	lineToDisplay = DataAdapter.getTransgressionSynthesis(report,language);
+                DocXTools.fillTable(document,headerSynthesis,lineToDisplay, language.getPlaceHolder()); 
+                
+                // For each tools of language
+                for (CodingLanguageTool tool : language.getTools()) {
+                	//System.out.println( "----Coding language tool" + tool.getName());
+                	//Table with not repected rules for the tool
+                    lineToDisplay = DataAdapter.getRulesTransgression(report, tool);
+                    DocXTools.fillTable(document,headerTool,lineToDisplay, tool.getPlaceHolder());
+                }
+            	
+            }
+         
+            
             // Add issues count by type and severity
             final List<List<String>> types = DataAdapter.getTypes(report);
             DocXTools.fillTable(document,
@@ -141,6 +200,8 @@ public class DocXExporter implements IExporter {
 
             // replace all placeholder in the document (head, body, foot) with the map
             DocXTools.replacePlaceholder(document, replacementValues);
+            
+            
 
             // Save the result by creating a new file in the directory given by report.path property
             final FileOutputStream out = new FileOutputStream(path);

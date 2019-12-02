@@ -26,6 +26,7 @@ import fr.cnes.sonar.report.factory.ReportModelFactory;
 import fr.cnes.sonar.report.factory.ServerFactory;
 import fr.cnes.sonar.report.model.Report;
 import fr.cnes.sonar.report.model.SonarQubeServer;
+import fr.cnes.sonar.report.utils.CodingLanguageManager;
 import fr.cnes.sonar.report.utils.ReportConfiguration;
 import fr.cnes.sonar.report.utils.StringManager;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
@@ -98,6 +99,9 @@ public final class ReportCommandLine {
         // Set the language of the report.
         // assumes the language is set with language_country
         StringManager.changeLocale(conf.getLanguage());
+        
+        //Set the coding language configuration
+        CodingLanguageManager.chargeProperties(conf.getLanguageConfiguration());
 
         // Display version information and exit.
         if(conf.isVersion()) {
